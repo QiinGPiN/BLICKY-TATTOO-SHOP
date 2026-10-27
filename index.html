@@ -149,3 +149,49 @@ document.getElementById('bookingForm').addEventListener('submit', function(event
   const closeBtn = document.getElementById('payClose');
   const sendBtn = document.getElementById('paySend');
   const custom = document.getElementById('customAmount');
+  const err = document.getElementById('payError');
+  const amountChips = document.querySelectorAll('#amountChips .chip');
+  const methodChips = document.querySelectorAll('#methodChips .chip');
+  let amount = null, method = null;
+
+  function openModal() { modal.hidden = false; document.body.style.overflow = 'hidden'; closeBtn.focus(); }
+  function closeModal() { modal.hidden = true; document.body.style.overflow = ''; openBtn.focus(); }
+
+  function select(chips, chip) {
+    chips.forEach(c => c.setAttribute('aria-pressed', c === chip ? 'true' : 'false'));
+  }
+
+  amountChips.forEach(chip => chip.addEventListener('click', () => {
+    amount = Number(chip.dataset.amount);
+    custom.value = '';
+    select(amountChips, chip);
+    err.textContent = '';
+  }));
+
+  custom.addEventListener('input', () => {
+    const v = Number(custom.value);
+    amount = (Number.isFinite(v) && v > 0) ? v : null;
+    select(amountChips, null);
+    err.textContent = '';
+  });
+
+  methodChips.forEach(chip => chip.addEventListener('click', () => {
+    method = chip.dataset.method;
+    select(methodChips, chip);
+    err.textContent = '';
+  }));
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+  sendBtn.addEventListener('click', () => {
+    if (!amount) { err.textContent = 'Please select or enter an amount.'; return; }
+    if (!method) { err.textContent = 'Please select a payment option.'; return; }
+    const digits = WHATSAPP_NUMBER.replace(/\D/g, '');
+    const text = `Pay $${amount} with ${method}`;
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+  });
+})();
+</script></body></html>
